@@ -401,6 +401,7 @@ function authLogout(){
   <div class="nav-item" tabindex="0" role="button" aria-label="Revision" onclick="switchView('revision',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchView('revision',this)}"><span>🔁</span>Revision</div>
   <div class="nav-item" tabindex="0" role="button" aria-label="Timetable" onclick="switchView('timetable',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchView('timetable',this)}"><span>📅</span>Timetable</div>
   <div class="nav-item" tabindex="0" role="button" aria-label="Focus" onclick="switchView('focus',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchView('focus',this)}"><span>🎯</span>Focus</div>
+  <div class="nav-item" tabindex="0" role="button" aria-label="Manual" onclick="switchView('manual',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchView('manual',this)}"><span>📖</span>Manual</div>
   <div class="nav-bottom">
     <div id="live-clock" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--blue);text-align:center;margin-bottom:8px;letter-spacing:.05em"></div>
     <div style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:12px" id="sidebar-stats">Loading…</div>
@@ -745,6 +746,82 @@ function authLogout(){
 </div>
 
 </div></div></div>
+
+<!-- ══════════ MANUAL ══════════ -->
+<div class="view" id="view-manual">
+  <div class="page-title">Manual</div>
+  <div class="page-sub">How to use every part of The Academic OS</div>
+
+  <div class="glass" style="padding:18px;margin-bottom:16px">
+    <div class="section-label">⬛ Dashboard</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      Your home screen. Shows your overall GPA, a heatmap of recent study activity, upcoming deadlines, and quick stats pulled from everything else in the app. Nothing to set up here — it updates automatically as you use the other sections.
+    </div>
+  </div>
+
+  <div class="glass" style="padding:18px;margin-bottom:16px">
+    <div class="section-label">📊 Grade & GPA Engine</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      Where you track subjects and grades.<br><br>
+      <strong style="color:var(--text)">Adding a subject:</strong> click <strong>+ Add Subject</strong>. Pick a standard curriculum (IGCSE / A-Level / AP) or switch to <strong>Local Curriculum</strong> to type in any subject name freely. Set lessons-per-week (this weights the subject in your overall GPA — more weekly lessons = more influence on your GPA), how many summative assessments (SAs) it has, and how much SAs vs the final exam count toward the grade (must total 100%).<br><br>
+      <strong style="color:var(--text)">Entering scores:</strong> click into any test cell in the table and type a score. GPA, letter grade, and category update instantly.<br><br>
+      <strong style="color:var(--text)">Editing a subject:</strong> click the subject name to change its weighting, lessons/week, or delete it entirely.<br><br>
+      <strong style="color:var(--text)">Target GPA:</strong> set a goal GPA — the app shows what average score you still need on remaining assessments to hit it.
+    </div>
+  </div>
+
+  <div class="glass" style="padding:18px;margin-bottom:16px">
+    <div class="section-label">✏️ The Loom</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      Your task manager. Click <strong>+ Add Task</strong> to log homework or assignments — set a subject, due date, and an <strong>energy level</strong> (High/Medium/Low), which is meant to reflect how much mental effort the task takes so you can match tasks to how you're feeling. Filter and sort the list by subject, energy, or due date. The "Daily Load This Week" card shows how tasks are distributed across the week so you can spot overloaded days early.
+    </div>
+  </div>
+
+  <div class="glass" style="padding:18px;margin-bottom:16px">
+    <div class="section-label">📓 Knowledge Vault</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      Your notes system. Click <strong>+ New Note</strong> to start writing — supports Markdown formatting and LaTeX for math/science notation. You can attach PDF or Word files to a note, and everything auto-saves as you type. Use the search bar or the subject filter to find notes quickly once you have a lot of them.
+    </div>
+  </div>
+
+  <div class="glass" style="padding:18px;margin-bottom:16px">
+    <div class="section-label">🔁 Revision</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      Spaced-repetition study planner. Click <strong>+ Log Study Session</strong> after studying a subject, then rate your confidence 1 (very low) to 5 (mastered) — the app schedules when you should revisit that subject next, spacing it further out the more confident you are. The <strong>16-week heatmap</strong> shows your study time day by day, and the <strong>Priority Queue</strong> surfaces whatever's most overdue for review, so you always know what to study next without guessing.
+    </div>
+  </div>
+
+  <div class="glass" style="padding:18px;margin-bottom:16px">
+    <div class="section-label">📅 Timetable</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      Your weekly class schedule. Click any empty slot to add a lesson or break — unlimited slots per day, fully editable. The banner at the top shows a live countdown to your next class. <strong>Reset Defaults</strong> restores the starting template; <strong>Clear All</strong> wipes it completely if you'd rather build it from scratch.
+    </div>
+  </div>
+
+  <div class="glass" style="padding:18px;margin-bottom:16px">
+    <div class="section-label">🎯 Focus</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      A Pomodoro-style focus timer with optional ambient background sound. Customize how long focus sessions and breaks last, pick a sound (or none), and adjust volume. Good for dedicated study blocks — start it, work until it ends, take the break, repeat.
+    </div>
+  </div>
+
+  <div class="glass" style="padding:18px;margin-bottom:16px">
+    <div class="section-label">☁️ Accounts & Cloud Sync</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      Your data (grades, notes, tasks, timetable — everything) is tied to your account and synced to the cloud automatically a couple seconds after any change, so it's the same on every device you log into.<br><br>
+      <strong style="color:var(--text)">Forgot your password?</strong> Click <strong>Forgot password?</strong> on the login screen — this only works if you've set a recovery email (see below).<br><br>
+      <strong style="color:var(--text)">Recovery email:</strong> click <strong>✉️ Recovery Email</strong> near the top of the screen (visible once logged in) to add or update the email used for password resets.<br><br>
+      <strong style="color:var(--text)">Backups:</strong> use <strong>⬇ Export</strong> in the sidebar anytime to download all your data as a JSON file — useful as a personal backup, or to move data between accounts. <strong>⬆ Import</strong> loads a previously exported file back in.
+    </div>
+  </div>
+
+  <div class="glass" style="padding:18px">
+    <div class="section-label">💬 Need more help?</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      Use the <strong>Contact Developer</strong> links at the bottom of the sidebar (email or Telegram) for anything not covered here, or to report a bug.
+    </div>
+  </div>
+</div>
 
 <!-- ══════════ MODALS ══════════ -->
 
@@ -1283,6 +1360,7 @@ else if(id==='vault')renderNotes();
 else if(id==='revision')renderRevision();
 else if(id==='timetable')renderTimetable();
 else if(id==='focus')renderFocus();
+else if(id==='manual'){/* static content, nothing to render */}
 }
 function heatmapHTML(){
 const today=new Date(),W=16;let h='<div class="hmap">';
