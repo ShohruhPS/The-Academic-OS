@@ -56,17 +56,55 @@
           <label class="form-label">Username</label>
           <input class="inp" id="auth-username" placeholder="lowercase, no spaces" autocomplete="username" required/>
         </div>
+        <div class="form-group" id="auth-email-group" style="display:none">
+          <label class="form-label">Email <span style="color:var(--text3);font-weight:400">(for password recovery)</span></label>
+          <input class="inp" id="auth-email" type="email" placeholder="you@example.com" autocomplete="email"/>
+        </div>
         <div class="form-group">
           <label class="form-label">Password</label>
           <input class="inp" id="auth-password" type="password" placeholder="At least 6 characters" autocomplete="current-password" required/>
         </div>
         <button class="btn btn-primary" type="submit" id="auth-submit-btn" style="width:100%;justify-content:center;padding:11px 0;margin-top:4px">Log In</button>
       </form>
+      <div id="auth-forgot-link" style="text-align:center;margin-top:14px">
+        <a href="#" onclick="showForgotForm();return false" style="font-size:12px;color:var(--text2);text-decoration:none">Forgot password?</a>
+      </div>
       <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:16px;line-height:1.6">Your grades, notes, and settings are stored securely in the cloud so you can access them from any device.</div>
+    </div>
+
+    <div id="auth-forgot-wrap" style="display:none">
+      <div class="modal-title" style="font-size:16px;margin-bottom:6px">Reset your password</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6">Enter the email you signed up with — if it's linked to an account, we'll send a reset link. Only works if you added a recovery email; usernames alone can't be recovered.</div>
+      <div id="auth-forgot-error"></div>
+      <div id="auth-forgot-success" style="display:none;font-size:12px;color:var(--emerald);background:var(--em-d);border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:9px 12px;margin-bottom:14px;line-height:1.5">Check your inbox for a reset link. It expires in 1 hour.</div>
+      <form id="auth-forgot-form" onsubmit="handleForgotSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="inp" id="forgot-email" type="email" placeholder="you@example.com" required/>
+        </div>
+        <button class="btn btn-primary" type="submit" id="forgot-submit-btn" style="width:100%;justify-content:center;padding:11px 0;margin-top:4px">Send Reset Link</button>
+      </form>
+      <div style="text-align:center;margin-top:14px">
+        <a href="#" onclick="showLoginForm();return false" style="font-size:12px;color:var(--text2);text-decoration:none">← Back to log in</a>
+      </div>
+    </div>
+
+    <div id="auth-reset-wrap" style="display:none">
+      <div class="modal-title" style="font-size:16px;margin-bottom:6px">Set a new password</div>
+      <div id="auth-reset-error"></div>
+      <form id="auth-reset-form" onsubmit="handleResetSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">New password</label>
+          <input class="inp" id="reset-password" type="password" placeholder="At least 6 characters" required/>
+        </div>
+        <button class="btn btn-primary" type="submit" id="reset-submit-btn" style="width:100%;justify-content:center;padding:11px 0;margin-top:4px">Set New Password</button>
+      </form>
     </div>
   </div>
 </div>
 <button class="btn btn-sm" id="auth-logout-btn" style="display:none" onclick="authLogout()">⎋ Log Out</button>
+<button class="btn btn-sm" id="auth-email-btn" style="display:none;position:fixed;z-index:50;top:14px;right:150px" onclick="authPromptEmail()">✉️ Recovery Email</button>
+
 
 <!-- NOTE EDITOR -->
 <div id="note-editor">
@@ -89,7 +127,7 @@
 <script>
 // ══════════ ACCOUNTS + CLOUD SYNC (MongoDB Atlas via backend) ══════════
 // After deploying backend/ (see backend/README.md), put its URL here:
-const API_BASE = 'https://academicos-xohl.onrender.com';
+const API_BASE = 'https://YOUR-BACKEND-URL.onrender.com';
 
 function getToken(){ return localStorage.getItem('aos_token'); }
 function getAosKeys(){
@@ -148,6 +186,26 @@ function authHideGate(){
   btn.style.display='inline-flex';
   const u=localStorage.getItem('aos_username');
   btn.textContent = (u ? '@'+u+' · ' : '') + '⎋ Log Out';
+  document.getElementById('auth-email-btn').style.display='inline-flex';
+}
+
+async function authPromptEmail(){
+  const email = prompt('Set or update your recovery email (used only for "forgot password" links):');
+  if(email===null) return; // cancelled
+  const token=getToken();
+  if(!token) return;
+  try{
+    const res = await fetch(API_BASE+'/api/account',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({email: email.trim()})
+    });
+    const json = await res.json();
+    if(!res.ok){ alert(json.error||'Could not update email.'); return; }
+    alert(email.trim() ? 'Recovery email saved.' : 'Recovery email removed.');
+  }catch(err){
+    alert('Could not reach the server. Try again in a moment.');
+  }
 }
 function authShowForm(msg){
   document.getElementById('auth-loading').style.display='none';
@@ -166,8 +224,23 @@ function setAuthMode(mode){
   document.getElementById('tab-login').classList.toggle('active',mode==='login');
   document.getElementById('tab-register').classList.toggle('active',mode==='register');
   document.getElementById('auth-name-group').style.display = mode==='register' ? 'block':'none';
+  document.getElementById('auth-email-group').style.display = mode==='register' ? 'block':'none';
+  document.getElementById('auth-forgot-link').style.display = mode==='register' ? 'none':'block';
   document.getElementById('auth-submit-btn').textContent = mode==='register' ? 'Create Account' : 'Log In';
   authClearError();
+}
+
+function showLoginForm(){
+  document.getElementById('auth-forgot-wrap').style.display='none';
+  document.getElementById('auth-reset-wrap').style.display='none';
+  document.getElementById('auth-form-wrap').style.display='block';
+  setAuthMode('login');
+}
+function showForgotForm(){
+  document.getElementById('auth-form-wrap').style.display='none';
+  document.getElementById('auth-forgot-wrap').style.display='block';
+  document.getElementById('auth-forgot-success').style.display='none';
+  document.getElementById('auth-forgot-error').style.display='none';
 }
 
 async function handleAuthSubmit(e){
@@ -176,13 +249,14 @@ async function handleAuthSubmit(e){
   const username=document.getElementById('auth-username').value.trim();
   const password=document.getElementById('auth-password').value;
   const name=document.getElementById('auth-name').value.trim();
+  const email=document.getElementById('auth-email').value.trim();
   const btn=document.getElementById('auth-submit-btn');
   btn.disabled=true; const oldText=btn.textContent; btn.textContent='Please wait…';
   const wakeupTimer=setTimeout(()=>{ btn.textContent='Waking up server…'; }, 4000);
   try{
     const path = _authMode==='register' ? '/api/auth/register' : '/api/auth/login';
     const body = _authMode==='register'
-      ? {username,password,name,data:collectLocalData()} // preserve any local-only progress
+      ? {username,password,name,email,data:collectLocalData()} // preserve any local-only progress
       : {username,password};
     const res = await fetch(API_BASE+path,{
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
@@ -202,6 +276,54 @@ async function handleAuthSubmit(e){
   }
 }
 
+async function handleForgotSubmit(e){
+  e.preventDefault();
+  const email=document.getElementById('forgot-email').value.trim();
+  const btn=document.getElementById('forgot-submit-btn');
+  const errEl=document.getElementById('auth-forgot-error');
+  errEl.style.display='none';
+  btn.disabled=true; const oldText=btn.textContent; btn.textContent='Sending…';
+  try{
+    const res = await fetch(API_BASE+'/api/auth/forgot-password',{
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email})
+    });
+    const json = await res.json();
+    if(!res.ok){ errEl.textContent=json.error||'Something went wrong.'; errEl.style.display='block'; btn.disabled=false; btn.textContent=oldText; return; }
+    document.getElementById('auth-forgot-success').style.display='block';
+    document.getElementById('auth-forgot-form').style.display='none';
+  }catch(err){
+    errEl.textContent='Could not reach the server. Check your connection and try again.';
+    errEl.style.display='block';
+    btn.disabled=false; btn.textContent=oldText;
+  }
+}
+
+async function handleResetSubmit(e){
+  e.preventDefault();
+  const password=document.getElementById('reset-password').value;
+  const params=new URLSearchParams(location.search);
+  const token=params.get('reset');
+  const btn=document.getElementById('reset-submit-btn');
+  const errEl=document.getElementById('auth-reset-error');
+  errEl.style.display='none';
+  btn.disabled=true; const oldText=btn.textContent; btn.textContent='Saving…';
+  try{
+    const res = await fetch(API_BASE+'/api/auth/reset-password',{
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token,password})
+    });
+    const json = await res.json();
+    if(!res.ok){ errEl.textContent=json.error||'Something went wrong.'; errEl.style.display='block'; btn.disabled=false; btn.textContent=oldText; return; }
+    // Clear the reset token from the URL and send them to log in with the new password.
+    history.replaceState(null,'',location.pathname);
+    document.getElementById('auth-reset-wrap').style.display='none';
+    authShowForm('Password updated — log in with your new password.');
+  }catch(err){
+    errEl.textContent='Could not reach the server. Check your connection and try again.';
+    errEl.style.display='block';
+    btn.disabled=false; btn.textContent=oldText;
+  }
+}
+
 function authLogout(){
   if(!confirm('Log out? Your data stays saved in the cloud.')) return;
   localStorage.removeItem('aos_token');
@@ -212,6 +334,16 @@ function authLogout(){
 }
 
 (async function initAuth(){
+  // If this page load came from a password-reset email link, show that form
+  // immediately, regardless of login state.
+  const resetToken = new URLSearchParams(location.search).get('reset');
+  if(resetToken){
+    authShowGate();
+    document.getElementById('auth-loading').style.display='none';
+    document.getElementById('auth-reset-wrap').style.display='block';
+    return;
+  }
+
   const token=getToken();
   if(!token){ authShowGate(); authShowForm(); return; }
 
@@ -909,7 +1041,7 @@ console.warn('Storage save failed for key',key,e);
 queueServerSync();
 }
 function load(key,def){try{const v=localStorage.getItem('aos_'+key);return v?JSON.parse(v):def;}catch(e){return def;}}
-const _isFirstVisit = !localStorage.getItem('gradesheet') && !localStorage.getItem('academicOS_onboarded');
+const _isFirstVisit = !localStorage.getItem('gradesheet') && !load('academicOS_onboarded', null);
 const _demoGrades = _isFirstVisit ? [
 {id:'g1',subjectId:'s1',score:90,lessonsPerWeek:4,label:'Unit Test 1',date:'2025-01-15'},
 {id:'g2',subjectId:'s1',score:92,lessonsPerWeek:4,label:'Unit Test 2',date:'2025-02-20'},
@@ -3516,7 +3648,7 @@ var OB_COLOR_CLASS = {
 };
 var _obNationalSubjects = [];
 (function initOnboarding(){
-if(localStorage.getItem('academicOS_onboarded')) return;
+if(load('academicOS_onboarded', null)) return;
 setTimeout(function(){
 var overlay = document.getElementById('onboarding-overlay');
 if(overlay) overlay.style.display = 'flex';
@@ -3643,7 +3775,7 @@ overlay.style.opacity = '0';
 overlay.style.transition = 'opacity .22s';
 setTimeout(function(){ overlay.style.display = 'none'; overlay.style.opacity = ''; }, 230);
 }
-localStorage.setItem('academicOS_onboarded','dismissed');
+save('academicOS_onboarded','dismissed');
 }
 function submitOnboarding(){
 var errEl = document.getElementById('ob-error2');
@@ -3722,12 +3854,12 @@ _obProfile: true
 });
 });
 saveGS();
-localStorage.setItem('academicOS_onboarded', JSON.stringify({
+save('academicOS_onboarded', {
 name: name, grade: grade,
 curricula: curricula,
 subjects: allEntries,
 ts: now
-}));
+});
 if(typeof renderGradeSheet === 'function') renderGradeSheet();
 if(typeof renderDashboard  === 'function') renderDashboard();
 var subjectNames = allEntries.map(function(e){ return e.subject; });
