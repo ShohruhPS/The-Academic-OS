@@ -177,12 +177,24 @@ window.addEventListener('beforeunload', ()=>{
   ); }
 });
 
-function authShowGate(){ document.getElementById('auth-gate').style.display='flex'; document.getElementById('auth-account-row').style.display='none'; }
+let _pendingAccountUI=null;
+function updateAccountUI(loggedIn){
+  const row=document.getElementById('auth-account-row');
+  if(!row){ _pendingAccountUI=loggedIn; return; } // sidebar not parsed yet — retry once DOM is ready
+  row.style.display = loggedIn ? 'flex' : 'none';
+  if(loggedIn){
+    const unameEl=document.getElementById('auth-account-username');
+    if(unameEl) unameEl.textContent = localStorage.getItem('aos_username') ? '@'+localStorage.getItem('aos_username') : '';
+  }
+}
+document.addEventListener('DOMContentLoaded', function(){
+  if(_pendingAccountUI!==null) updateAccountUI(_pendingAccountUI);
+});
+
+function authShowGate(){ document.getElementById('auth-gate').style.display='flex'; updateAccountUI(false); }
 function authHideGate(){
   document.getElementById('auth-gate').style.display='none';
-  const u=localStorage.getItem('aos_username');
-  document.getElementById('auth-account-username').textContent = u ? '@'+u : '';
-  document.getElementById('auth-account-row').style.display='flex';
+  updateAccountUI(true);
 }
 
 async function authPromptEmail(){
