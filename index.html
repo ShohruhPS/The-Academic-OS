@@ -3,13 +3,57 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>The Academic OS | Personal Student Dashboard</title>
-<meta name="description" content="The Academic OS is a free, trilingual student productivity suite for tracking grades, calculating GPA, and managing study tasks."/>
-<meta name="keywords" content="GPA calculator, student planner, academic dashboard, study tracker, grade tracker, timetable, revision planner, IGCSE, A-Level, AP"/>
-<meta property="og:title" content="The Academic OS"/>
-<meta property="og:description" content="Organize your academic life with the Loom and Grade Engine."/>
-<meta property="og:image" content="/favicon.png"/>
+<title>The Academic OS | Free Student Productivity Suite</title>
+<meta name="title" content="The Academic OS | Free Student Productivity Suite"/>
+<meta name="description" content="The Academic OS is a free student productivity suite for tracking grades, calculating GPA, managing study tasks, and organizing academic life in one place."/>
+<meta name="keywords" content="GPA calculator, student planner, academic dashboard, study tracker, grade tracker, timetable, revision planner, IGCSE, A-Level, AP, student productivity suite"/>
+<meta name="author" content="The Academic OS"/>
+<meta name="robots" content="index,follow,max-image-preview:large"/>
+<meta name="language" content="en"/>
+<meta name="theme-color" content="#0d0f14"/>
+<link rel="canonical" href="https://academicos.me/"/>
+<link rel="alternate" hreflang="en" href="https://academicos.me/"/>
+<link rel="alternate" hreflang="ru" href="https://academicos.me/"/>
+<link rel="alternate" hreflang="uz" href="https://academicos.me/"/>
+<link rel="alternate" hreflang="x-default" href="https://academicos.me/"/>
+<meta property="og:title" content="The Academic OS | Free Student Productivity Suite"/>
+<meta property="og:description" content="Organize your academic life with the Loom, Grade Engine, timetable, and revision planner in one place."/>
+<meta property="og:image" content="https://academicos.me/favicon.png"/>
+<meta property="og:url" content="https://academicos.me/"/>
 <meta property="og:type" content="website"/>
+<meta property="og:site_name" content="The Academic OS"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="The Academic OS | Free Student Productivity Suite"/>
+<meta name="twitter:description" content="Track grades, calculate GPA, manage study tasks, and stay organized with a free academic dashboard."/>
+<meta name="twitter:image" content="https://academicos.me/favicon.png"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "The Academic OS",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Web",
+  "description": "Free student productivity suite for GPA tracking, notes, scheduling, revision planning, and study organization.",
+  "url": "https://academicos.me/",
+  "publisher": {
+    "@type": "Organization",
+    "name": "The Academic OS",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://academicos.me/logo.png"
+    }
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "audience": {
+    "@type": "Audience",
+    "audienceType": "Students"
+  }
+}
+</script>
 <link rel="icon" type="image/png" href="favicon.png"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
@@ -46,47 +90,48 @@ footer{border-top:1px solid var(--border);padding:24px 0;text-align:center;font-
 <body>
 <div class="wrap">
   <nav>
-    <a class="brand" href="/?home=1"><img src="logo.png" alt=""/><span>The Academic <b>OS</b></span></a>
+    <a class="brand" href="/?home=1" aria-label="The Academic OS home page"><img src="logo.png" alt="The Academic OS logo"/><span>The Academic <b>OS</b></span></a>
     <div style="display:flex;gap:10px"><a class="btn" href="app.html">Log in</a><a class="btn p" href="app.html#signup">Sign up</a></div>
   </nav>
 
-  <section class="hero">
-    <span class="pill">Free · English · Русский · O'zbek</span>
-    <h1>Your whole academic life, <em>in one place.</em></h1>
-    <p>Track grades, calculate your GPA, plan study tasks, revise smarter and keep your notes together. Everything syncs to your account, on any device.</p>
-    <div class="cta"><a class="btn p" href="app.html#signup">Get started free</a><a class="btn" href="app.html">I already have an account</a></div>
-    <div class="note">No installs. Works in your browser.</div>
-  </section>
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <span class="pill">Free · English · Русский · O'zbek</span>
+      <h1 id="hero-title">Your whole academic life, <em>in one place.</em></h1>
+      <p>Track grades, calculate your GPA, plan study tasks, revise smarter, and keep your notes together. Everything syncs to your account, on any device.</p>
+      <div class="cta"><a class="btn p" href="app.html#signup">Get started free</a><a class="btn" href="app.html">I already have an account</a></div>
+      <div class="note">No installs. Works in your browser.</div>
+    </section>
 
-  <h2>Everything a student needs</h2>
-  <section class="grid">
-    <div class="card"><i>📊</i><h3>Grade &amp; GPA Engine</h3><p>Enter your marks and see your grades and GPA update instantly.</p></div>
-    <div class="card"><i>✏️</i><h3>The Loom</h3><p>Plan and manage your study tasks so nothing slips through.</p></div>
-    <div class="card"><i>📓</i><h3>Knowledge Vault</h3><p>Markdown notes with LaTeX formulas, file attachments and EN↔RU↔UZ translation.</p></div>
-    <div class="card"><i>🔁</i><h3>Revision</h3><p>Keep revision on track before exams, not the night before.</p></div>
-    <div class="card"><i>📅</i><h3>Timetable</h3><p>Your weekly schedule, always one tap away.</p></div>
-    <div class="card"><i>🎯</i><h3>Focus mode</h3><p>Distraction-free study sessions with ambient sound.</p></div>
-    <div class="card"><i>☁️</i><h3>Cloud sync</h3><p>Log in anywhere and pick up exactly where you left off.</p></div>
-    <div class="card"><i>📄</i><h3>PDF export</h3><p>Download your results to share or print.</p></div>
-  </section>
+    <h2>Everything a student needs</h2>
+    <section class="grid" aria-label="Core student features">
+      <article class="card"><i>📊</i><h3>Grade &amp; GPA Engine</h3><p>Enter your marks and see your grades and GPA update instantly.</p></article>
+      <article class="card"><i>✏️</i><h3>The Loom</h3><p>Plan and manage your study tasks so nothing slips through.</p></article>
+      <article class="card"><i>📓</i><h3>Knowledge Vault</h3><p>Markdown notes with LaTeX formulas, file attachments and EN↔RU↔UZ translation.</p></article>
+      <article class="card"><i>🔁</i><h3>Revision</h3><p>Keep revision on track before exams, not the night before.</p></article>
+      <article class="card"><i>📅</i><h3>Timetable</h3><p>Your weekly schedule, always one tap away.</p></article>
+      <article class="card"><i>🎯</i><h3>Focus mode</h3><p>Distraction-free study sessions with ambient sound.</p></article>
+      <article class="card"><i>☁️</i><h3>Cloud sync</h3><p>Log in anywhere and pick up exactly where you left off.</p></article>
+      <article class="card"><i>📄</i><h3>PDF export</h3><p>Download your results to share or print.</p></article>
+    </section>
 
-  <section class="band">
-    <h2>Ready to get organised?</h2>
-    <p>Create a free account in under a minute.</p>
-    <a class="btn p" href="app.html#signup" style="padding:13px 28px;font-size:15px">Create my account</a>
-  </section>
+    <section class="band" aria-labelledby="cta-title">
+      <h2 id="cta-title">Ready to get organised?</h2>
+      <p>Create a free account in under a minute.</p>
+      <a class="btn p" href="app.html#signup" style="padding:13px 28px;font-size:15px">Create my account</a>
+    </section>
+  </main>
 </div>
 <footer>© The Academic OS · <a href="app.html" style="text-decoration:underline">Log in</a></footer>
 
 <script>
-// Returning users (and password-reset email links) skip the landing page.
 (function(){
   try{
     var q=new URLSearchParams(location.search), loggedIn=!!localStorage.getItem('aos_token');
     if(q.has('reset') || (loggedIn && !q.has('home'))){
       location.replace('app.html'+location.search);
     }
-    if(loggedIn){ // viewing the landing page while logged in: swap the buttons
+    if(loggedIn){
       document.addEventListener('DOMContentLoaded',function(){
         var n=document.querySelector('nav .btn:not(.p)'), b=document.querySelector('nav .btn.p');
         if(n) n.style.display='none';
@@ -94,7 +139,6 @@ footer{border-top:1px solid var(--border);padding:24px 0;text-align:center;font-
       });
     }
   }catch(e){}
-  // Wake the free-tier backend while the visitor reads, so login is instant.
   fetch('https://academicos-xohl.onrender.com/api/health').catch(function(){});
 })();
 </script>
