@@ -1066,11 +1066,26 @@ function authLogout(){
   </div>
 </div>
 
-<script>function scoreToGPA(s){return s>=90?4.0:s>=80?3.7:s>=70?3.3:s>=60?3.0:s>=50?2.0:0.0;}
-function scoreToLetter(s){return s>=90?'A*':s>=80?'A':s>=70?'B':s>=60?'C':s>=50?'D':'U/F';}
+<script>
+function scoreToLetter(s) {
+        for(const entry of customGPAScale){
+            if(s >= entry.minScore) return entry.grade;
+        }
+        return 'U/F';
+    }
 function scoreToCat(s){return s>=90?'Excellent':s>=80?'Very Good':s>=70?'Good':s>=60?'Satisfactory':s>=50?'Pass':'Fail';}
-function gpaColor(g){return g>=4.0?'var(--emerald)':g>=3.7?'#34d399':g>=3.3?'var(--blue)':g>=3.0?'var(--amber)':g>=2.0?'var(--ruby)':'var(--text3)';}
-function sColor(s){return s>=90?'var(--emerald)':s>=80?'#34d399':s>=70?'var(--blue)':s>=60?'var(--amber)':s>=50?'var(--ruby)':'var(--text3)';}
+function gpaColor(g) {
+        for(const entry of customGPAScale){
+            if(g >= entry.points) return entry.color;
+        }
+        return 'var(--text3)';
+    }
+function sColor(s) {
+        for(const entry of customGPAScale){
+            if(s >= entry.minScore) return entry.color;
+        }
+        return 'var(--text3)';
+    }
 function calcGPA(list){
 if(!list.length)return 0;
 let pts=0,wt=0;
@@ -1161,6 +1176,17 @@ console.warn('Storage save failed for key',key,e);
 queueServerSync();
 }
 function load(key,def){try{const v=localStorage.getItem('aos_'+key);return v?JSON.parse(v):def;}catch(e){return def;}}
+
+const DEFAULT_GPA_SCALE = [
+{grade:'A*', range:'90–100%', minScore:90, points:4.0, color:'var(--emerald)'},
+{grade:'A',  range:'80–89%',  minScore:80, points:3.7, color:'var(--blue)'},
+{grade:'B',  range:'70–79%',  minScore:70, points:3.3, color:'var(--amber)'},
+{grade:'C',  range:'60–69%',  minScore:60, points:3.0, color:'#fb923c'},
+{grade:'D',  range:'50–59%',  minScore:50, points:2.0, color:'var(--ruby)'},
+{grade:'U/F',range:'Below 50%',minScore:0, points:0.0, color:'var(--text3)'},
+];
+let customGPAScale = load('customGPAScale', DEFAULT_GPA_SCALE.map(g=>({...g}))).sort((a,b)=>b.minScore-a.minScore);
+
 const _isFirstVisit = !localStorage.getItem('gradesheet') && !load('academicOS_onboarded', null);
 const _demoGrades = _isFirstVisit ? [
 {id:'g1',subjectId:'s1',score:90,lessonsPerWeek:4,label:'Unit Test 1',date:'2025-01-15'},
@@ -1447,7 +1473,7 @@ document.getElementById('subject-cards').innerHTML=gsRows.length?gsRows.map((r,i
 const col=gpaColor(r.uwGPA||0);
 const bg=colors[i%colors.length];
 const dim=bg.startsWith('#')?bg+'22':bg;
-const finalDisplay=r.finalRounded!=null?r.finalRounded:(r.saAvg!=null?r.saAvg:'—');
+const finalDisplay=r.finalRounded!=null?r.finalRounded:(r.hasExam&&!r.examEntered&&r.saAvg!=null?r.saAvg+'*':(r.saAvg!=null?r.saAvg:'—'));
 return`<div class="glass" style="padding:16px;animation:fadeUp .5s ease ${i*0.05}s both;position:relative;overflow:hidden;border-left:3px solid ${bg}55">
 <div style="position:absolute;inset:0;background:radial-gradient(circle at 100% 0%,${bg}18,transparent 55%);pointer-events:none"></div>
 <div class="flex" style="margin-bottom:10px"><div class="dot" style="background:${bg}"></div><span style="font-size:12px;font-weight:500;flex:1">${r.name}</span></div>
@@ -1529,7 +1555,7 @@ finalRounded=saAvg;
 finalRounded=Math.round(saWeighted+examWeighted);
 }
 }
-const gradeBase=saAvg;
+const gradeBase=finalRounded!=null?finalRounded:saAvg;
 const uwGPA=gradeBase!==null?scoreToGPA(gradeBase):null;
 const lpw=row.lessonsPerWeek||3;
 const grade=gradeBase!==null?scoreToLetter(gradeBase):'—';
@@ -1718,22 +1744,19 @@ globalRequired = (targetPct * (totalGradedW + totalRemainingW)/100 - totalCurren
 return { targetGPA, targetPct, totalGradedW, totalRemainingW,
 totalCurrentContrib, globalRequired, rowProjections };
 }
-function gpaToMinPct(gpa){
-if(gpa >= 4.0)  return 90;
-if(gpa >= 3.7)  return 80;
-if(gpa >= 3.3)  return 70;
-if(gpa >= 3.0)  return 60;
-if(gpa >= 2.0)  return 50;
-return 0;
-}
-function gpaToLabel(gpa){
-if(gpa >= 4.0)  return 'A* (4.0)';
-if(gpa >= 3.7)  return 'A (3.7)';
-if(gpa >= 3.3)  return 'B (3.3)';
-if(gpa >= 3.0)  return 'C (3.0)';
-if(gpa >= 2.0)  return 'D (2.0)';
-return 'U/F (0.0)';
-}
+function gpaToMinPct(gpa) {
+        const sorted = [...customGPAScale].sort((a,b)=>a.points-b.points);
+        for (const entry of sorted) {
+            if (gpa <= entry.points) return entry.minScore;
+        }
+        return 100;
+    }
+function gpaToLabel(gpa) {
+        for(const entry of customGPAScale){
+            if(gpa >= entry.points) return entry.grade + ' (' + entry.points.toFixed(1) + ')';
+        }
+        return 'U/F (0.0)';
+    }
 function renderGSGPAPanel(uwGPA, wGPA, subjectCount){
 const el=document.getElementById('gs-gpa-panel');
 if(!el) return;
@@ -3411,19 +3434,10 @@ return `<div class="glass anim-slide" style="padding:13px 16px;display:flex;alig
 </div>`;
 }).join('');
 }
-const DEFAULT_GPA_SCALE = [
-{grade:'A*', range:'90–100%', minScore:90, points:4.0, color:'var(--emerald)'},
-{grade:'A',  range:'80–89%',  minScore:80, points:3.7, color:'var(--blue)'},
-{grade:'B',  range:'70–79%',  minScore:70, points:3.3, color:'var(--amber)'},
-{grade:'C',  range:'60–69%',  minScore:60, points:3.0, color:'#fb923c'},
-{grade:'D',  range:'50–59%',  minScore:50, points:2.0, color:'var(--ruby)'},
-{grade:'U/F',range:'Below 50%',minScore:0, points:0.0, color:'var(--text3)'},
-];
-let customGPAScale = load('customGPAScale', DEFAULT_GPA_SCALE.map(g=>({...g})));
-function saveGPAScale(){save('customGPAScale',customGPAScale);}
+
+function saveGPAScale(){customGPAScale.sort((a,b)=>b.minScore-a.minScore);save('customGPAScale',customGPAScale);}
 function scoreToGPA(s){
-const sorted = [...customGPAScale].sort((a,b)=>b.minScore-a.minScore);
-for(const entry of sorted){
+for(const entry of customGPAScale){
 if(s >= entry.minScore) return entry.points;
 }
 return 0.0;
