@@ -165,22 +165,13 @@ globalRequired = (targetPct * (totalGradedW + totalRemainingW)/100 - totalCurren
 return { targetGPA, targetPct, totalGradedW, totalRemainingW,
 totalCurrentContrib, globalRequired, rowProjections };
 }
-function gpaToMinPct(gpa){
-if(gpa >= 4.0)  return 90;
-if(gpa >= 3.7)  return 80;
-if(gpa >= 3.3)  return 70;
-if(gpa >= 3.0)  return 60;
-if(gpa >= 2.0)  return 50;
-return 0;
+function _bandForGPA(gpa){   // smallest grade band whose points reach the target (rounds UP, follows the custom scale)
+const bands=[..._scale()].sort((a,b)=>a.points-b.points||a.minScore-b.minScore);
+const hit=bands.find(b=>b.points>=gpa-1e-9);
+return hit||bands[bands.length-1];
 }
-function gpaToLabel(gpa){
-if(gpa >= 4.0)  return 'A* (4.0)';
-if(gpa >= 3.7)  return 'A (3.7)';
-if(gpa >= 3.3)  return 'B (3.3)';
-if(gpa >= 3.0)  return 'C (3.0)';
-if(gpa >= 2.0)  return 'D (2.0)';
-return 'U/F (0.0)';
-}
+function gpaToMinPct(gpa){const b=_bandForGPA(gpa);return b?b.minScore:0;}
+function gpaToLabel(gpa){const b=_bandForGPA(gpa);return b?`${b.grade} (${Number(b.points).toFixed(1)})`:'—';}
 function renderGSGPAPanel(uwGPA, wGPA, subjectCount){
 const el=document.getElementById('gs-gpa-panel');
 if(!el) return;
@@ -497,8 +488,9 @@ else document.getElementById('gs-sawt').value=100-ex;
 function closeGSModal(){document.getElementById('gs-modal').style.display='none';}
 function submitGSSubject(){
 const numTests=Math.max(1,+document.getElementById('gs-tests').value||3);
-const saWeight=+document.getElementById('gs-sawt').value||60;
-const examWeight=+document.getElementById('gs-exwt').value||40;
+const _wv=(id,def)=>{const v=document.getElementById(id).value;return (v===''||isNaN(+v))?def:+v;};   // a typed 0 must stay 0
+const saWeight=_wv('gs-sawt',60);
+const examWeight=_wv('gs-exwt',40);
 if(saWeight+examWeight!==100){alert('SA weight + Exam weight must equal 100%.');return;}
 const lpw=Math.max(1,+document.getElementById('gs-lpw').value||3);
 let name='';
@@ -647,7 +639,7 @@ doc.text(b.label,b.x+3,finalY+5.5);
 doc.setTextColor(...b.color);doc.setFontSize(10.5);doc.setFont('helvetica','bold');
 doc.text(String(b.val),b.x+3,finalY+13);
 });
-const fname='grade_sheet'+(studentInfo.name?'_'+studentInfo.name.replace(/[^a-zA-Z0-9_\-]/g,'_').replace(/_+/g,'_'):'')+'_'+new Date().toISOString().slice(0,10)+'.pdf';
+const fname='grade_sheet'+(studentInfo.name?'_'+studentInfo.name.replace(/[^a-zA-Z0-9_\-]/g,'_').replace(/_+/g,'_'):'')+'_'+localDateStr(new Date())+'.pdf';
 doc.save(fname);
 }
 function exportGSCSV(){

@@ -19,10 +19,10 @@ const today=new Date(),W=16;let h='<div class="hmap">';
 for(let w=0;w<W;w++){h+='<div class="hmap-col">';
 for(let d=0;d<7;d++){
 const dt=new Date(today);dt.setDate(today.getDate()-(W-1-w)*7-(today.getDay()||7)+d+1);
-const ds=dt.toISOString().slice(0,10);let i=0;
-Object.entries(confidence).forEach(([sid,c])=>{const n=new Date(c.lastReview);n.setDate(n.getDate()+srInt(c.score));if(n.toISOString().slice(0,10)===ds)i=Math.max(i,6-c.score);});
+const ds=localDateStr(dt);let i=0;
+Object.entries(confidence).forEach(([sid,c])=>{const n=parseDay(c.lastReview);n.setDate(n.getDate()+srInt(c.score));if(localDateStr(n)===ds)i=Math.max(i,6-c.score);});
 const bg=i===0?'rgba(255,255,255,.05)':i===1?'rgba(16,185,129,.25)':i===2?'rgba(245,158,11,.4)':i===3?'rgba(225,29,72,.5)':'rgba(225,29,72,.85)';
-const isTd=ds===today.toISOString().slice(0,10);
+const isTd=ds===localDateStr(today);
 h+=`<div class="hmap-cell" style="background:${bg};${isTd?'outline:2px solid var(--blue);outline-offset:1px':''}" title="${ds}"></div>`;
 }h+='</div>';}return h+'</div>';
 }
@@ -98,7 +98,7 @@ function deleteGrade(id){grades=grades.filter(g=>g.id!==id);saveGrades();renderG
 function openGradeModal(){
 refreshAllSubjectSelects();
 document.getElementById('gm-score').value='';document.getElementById('gm-weight').value='3';
-document.getElementById('gm-label').value='';document.getElementById('gm-date').value=new Date().toISOString().slice(0,10);
+document.getElementById('gm-label').value='';document.getElementById('gm-date').value=localDateStr(new Date());
 document.getElementById('gm-preview').style.display='none';
 document.getElementById('grade-modal').style.display='flex';
 }
@@ -115,7 +115,7 @@ document.getElementById('gm-preview').style.display='block';
 function submitGrade(){
 const sc=+document.getElementById('gm-score').value;
 if(isNaN(sc)||sc<0||sc>100){alert('Enter 0–100.');return;}
-grades.push({id:uid(),subjectId:document.getElementById('gm-subject').value,score:sc,lessonsPerWeek:+document.getElementById('gm-weight').value||3,label:document.getElementById('gm-label').value.trim()||'Assessment',date:document.getElementById('gm-date').value||new Date().toISOString().slice(0,10)});
+grades.push({id:uid(),subjectId:document.getElementById('gm-subject').value,score:sc,lessonsPerWeek:+document.getElementById('gm-weight').value||3,label:document.getElementById('gm-label').value.trim()||'Assessment',date:document.getElementById('gm-date').value||localDateStr(new Date())});
 saveGrades();closeGradeModal();renderGrades();
 }
 function gsCalc(row){
@@ -138,7 +138,7 @@ finalRounded=saAvg;
 finalRounded=Math.round(saWeighted+examWeighted);
 }
 }
-const gradeBase=saAvg;
+const gradeBase=finalRounded!==null?finalRounded:saAvg;   // grade & GPA follow the final once the exam is in
 const uwGPA=gradeBase!==null?scoreToGPA(gradeBase):null;
 const lpw=row.lessonsPerWeek||3;
 const grade=gradeBase!==null?scoreToLetter(gradeBase):'—';

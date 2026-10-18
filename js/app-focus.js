@@ -317,7 +317,7 @@ let _focusTickLast = null;
 function focusTick(){
 const now = Date.now();
 const elapsed = _focusTickLast ? Math.round((now - _focusTickLast) / 1000) : 1;
-_focusTickLast = now;
+_focusTickLast = _focusTickLast ? _focusTickLast + elapsed * 1000 : now;   // keep the fractional second so the timer doesn't drift
 focusState.remaining = Math.max(0, focusState.remaining - elapsed);
 if(focusState.remaining<=0){
 if(focusState.phase==='focus'){
@@ -325,12 +325,12 @@ focusState.sessions++;
 focusState.phase='break';
 focusState.remaining=focusState.breakMinutes*60;
 stopNoise();
-if(Notification&&Notification.permission==='granted') new Notification('Break time! 🎉',{body:`${focusState.focusMinutes} minutes done. Take a ${focusState.breakMinutes}-minute break.`,icon:''});
+if(typeof Notification!=='undefined'&&Notification.permission==='granted') new Notification('Break time! 🎉',{body:`${focusState.focusMinutes} minutes done. Take a ${focusState.breakMinutes}-minute break.`,icon:''});
 } else {
 focusState.phase='focus';
 focusState.remaining=focusState.focusMinutes*60;
 startNoise(focusState.selectedSound);
-if(Notification&&Notification.permission==='granted') new Notification('Focus time! 🎯',{body:'Break over. Back to work!',icon:''});
+if(typeof Notification!=='undefined'&&Notification.permission==='granted') new Notification('Focus time! 🎯',{body:'Break over. Back to work!',icon:''});
 }
 updateSoundWave();
 }

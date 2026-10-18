@@ -4,7 +4,7 @@ if(sel){const cur=sel.value;sel.innerHTML='<option value="all">All Subjects</opt
 renderLiveBanner('whats-next-loom');
 document.getElementById('weekly-load').innerHTML=[1,2,3,4,5].map(d=>{
 const n=timetable.filter(t=>t.day===d&&t.type==='lesson').length;
-return`<div class="flex" style="margin-bottom:7px"><span style="font-size:12px;color:var(--text3);width:30px">${dayN(d)}</span><div class="pbar" style="flex:1"><div class="pfill" style="width:${n/8*100}%;background:var(--blue)"></div></div><span style="font-size:12px;color:var(--text2);width:22px;text-align:right">${n}</span></div>`;
+return`<div class="flex" style="margin-bottom:7px"><span style="font-size:12px;color:var(--text3);width:30px">${dayN(d)}</span><div class="pbar" style="flex:1"><div class="pfill" style="width:${Math.min(100,n/8*100)}%;background:var(--blue)"></div></div><span style="font-size:12px;color:var(--text2);width:22px;text-align:right">${n}</span></div>`;
 }).join('');
 renderTasks();
 }
@@ -19,7 +19,7 @@ else list.sort((a,b)=>eO[a.energy]-eO[b.energy]);
 document.getElementById('task-count-label').textContent=`${list.filter(t=>!t.done).length} pending · ${list.filter(t=>t.done).length} done`;
 const eC={High:'var(--ruby)',Medium:'var(--amber)',Low:'var(--emerald)'},eBg={High:'var(--ruby-d)',Medium:'var(--am-d)',Low:'var(--em-d)'},eI={High:'🔥',Medium:'⚡',Low:'🌿'};
 document.getElementById('tasks-list').innerHTML=list.length?list.map((task,i)=>{
-const s=getSubj(task.subjectId),ov=task.dueDate&&new Date(task.dueDate)<new Date()&&!task.done,pr=isPrio(task.subjectId)&&!task.done;
+const s=getSubj(task.subjectId),ov=task.dueDate&&daysUntil(task.dueDate)<0&&!task.done,pr=isPrio(task.subjectId)&&!task.done;
 return`<div class="glass anim-slide" style="padding:13px 16px;display:flex;align-items:center;gap:12px;animation-delay:${i*0.04}s;opacity:${task.done?.45:1};border-left:3px solid ${pr?'var(--ruby)':s.color}44">
 <button onclick="toggleTask('${task.id}')" style="width:20px;height:20px;border-radius:6px;border:2px solid ${task.done?'var(--emerald)':'rgba(255,255,255,.2)'};background:${task.done?'var(--em-d)':'transparent'};display:flex;align-items:center;justify-content:center;color:var(--emerald);font-size:11px;cursor:pointer;flex-shrink:0;transition:all .18s">${task.done?'✓':''}</button>
 <div style="flex:1;min-width:0">
@@ -61,10 +61,10 @@ populateVaultFilter();
 const search=document.getElementById('vault-search').value.toLowerCase(),fS=document.getElementById('vault-filter-subj').value;
 let list=[...notes];
 if(fS!=='all') list=list.filter(n=>n.subjectId===fS);
-if(search) list=list.filter(n=>n.title.toLowerCase().includes(search)||n.content.toLowerCase().includes(search));
+if(search) list=list.filter(n=>(n.title||'').toLowerCase().includes(search)||(n.content||'').toLowerCase().includes(search));
 const grid=document.getElementById('notes-grid');
 grid.innerHTML=list.length?list.map((note,i)=>{
-const s=getSubj(note.subjectId),preview=esc(note.content.replace(/[#*`$\[\]\\]/g,'').slice(0,100)),tri=note.content.includes('🇷🇺')||note.content.includes('🇺🇿');
+const s=getSubj(note.subjectId),preview=esc((note.content||'').replace(/[#*`$\[\]\\]/g,'').slice(0,100)),tri=(note.content||'').includes('🇷🇺')||(note.content||'').includes('🇺🇿');
 const tags=(note.tags||[]).map(t=>`<span class="tag" style="background:var(--surface2);color:var(--text3);font-size:10px">${esc(t)}</span>`).join('');
 const fCount=(note.files||[]).length;
 const fileIcons=(note.files||[]).slice(0,3).map(f=>{const ic=f.type.includes('pdf')?'📄':f.type.includes('word')||f.type.includes('document')?'📝':f.type.includes('image')?'🖼':'📎';return`<span style="font-size:13px" title="${esc(f.name)}">${ic}</span>`;}).join('');
@@ -247,8 +247,8 @@ content=document.getElementById('ne-content').value,
 subjectId=document.getElementById('ne-subject').value,
 tags=document.getElementById('ne-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
 files=[...currentNoteFiles];
-if(editingNoteId) notes=notes.map(n=>n.id===editingNoteId?{...n,title,content,subjectId,tags,files,date:new Date().toISOString().slice(0,10)}:n);
-else notes.push({id:uid(),title,content,subjectId,tags,files,date:new Date().toISOString().slice(0,10)});
+if(editingNoteId) notes=notes.map(n=>n.id===editingNoteId?{...n,title,content,subjectId,tags,files,date:localDateStr(new Date())}:n);
+else notes.push({id:uid(),title,content,subjectId,tags,files,date:localDateStr(new Date())});
 const totalFileSize=files.reduce((a,f)=>a+(f.dataUrl?f.dataUrl.length:0),0);
 if(totalFileSize>2*1024*1024){
 const proceed=confirm('Attached files are large (~'+(totalFileSize/1024/1024).toFixed(1)+'MB as base64). This may exceed browser storage limits and could cause data loss.\n\nTip: Use the Export Backup feature regularly to save your data.\n\nSave anyway?');
@@ -337,6 +337,13 @@ throw new Error('Daily translation quota exceeded. MyMemory allows ~5,000 words/
 }
 throw new Error(data.responseDetails||'Translation returned empty result');
 }
+function setExamDate(sid,val){
+const d={...getExamDates()};
+if(val) d[sid]=val; else delete d[sid];
+save('examDates',d);
+renderRevision();
+if(typeof renderDashboard==='function') renderDashboard();
+}
 function renderRevision(){
 const totalMins = revisionSessions.reduce((a,s)=>a+s.duration,0);
 const sumEl = document.getElementById('rev-session-summary');
@@ -346,10 +353,10 @@ renderRevSessionsList();
 const cC={1:'var(--ruby)',2:'#f97316',3:'var(--amber)',4:'var(--blue)',5:'var(--emerald)'},cL={1:'Very Low',2:'Low',3:'Medium',4:'High',5:'Mastered'};
 document.getElementById('revision-list').innerHTML=SUBJECTS.map(s=>{
 const c=confidence[s.id]||{score:3,lastReview:'2025-01-01',reviewCount:0};
-const dl=daysToExam(s.id),nd=new Date(c.lastReview);nd.setDate(nd.getDate()+srInt(c.score));
-const ov=nd<new Date(),urg=(6-c.score)+(dl&&dl<=30?3:0)+(ov?2:0);
+const dl=daysToExam(s.id),nd=parseDay(c.lastReview);nd.setDate(nd.getDate()+srInt(c.score));
+const ov=localDateStr(nd)<localDateStr(new Date()),urg=(6-c.score)+(dl&&dl<=30?3:0)+(ov?2:0);
 const sg=grades.filter(g=>g.subjectId===s.id),avg=sg.length?sg.reduce((a,g)=>a+g.score,0)/sg.length:null;
-return{...s,c,dl,nd,ov,urg,avg};
+return{...s,c,dl,nd,ov,urg,avg,ed:(getExamDates()[s.id]||'')};
 }).sort((a,b)=>b.urg-a.urg).map((s,i)=>{
 const c=s.c,bars=[1,2,3,4,5].map(n=>`<div class="conf-bar" style="background:${n<=c.score?cC[c.score]:'rgba(255,255,255,.08)'}"></div>`).join('');
 return`<div class="glass anim-slide" style="padding:16px;animation-delay:${i*0.05}s;border-left:3px solid ${isPrio(s.id)?'var(--ruby)':s.color}44">
@@ -364,7 +371,8 @@ ${s.ov?`<span class="tag" style="background:var(--am-d);color:var(--amber);font-
 </div>
 <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
 <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">Confidence</div><div style="display:flex;gap:3px">${bars}</div><div style="font-size:10px;color:${cC[c.score]};margin-top:2px">${cL[c.score]}</div></div>
-<div><div style="font-size:10px;color:var(--text3)">Next Review</div><div style="font-size:12px;color:${s.ov?'var(--ruby)':'var(--text2)'};margin-top:2px">${s.nd.toISOString().slice(0,10)}</div></div>
+<div><div style="font-size:10px;color:var(--text3)">Next Review</div><div style="font-size:12px;color:${s.ov?'var(--ruby)':'var(--text2)'};margin-top:2px">${localDateStr(s.nd)}</div></div>
+<div><div style="font-size:10px;color:var(--text3)">Exam date</div><input type="date" class="inp" value="${esc(s.ed)}" onchange="setExamDate('${s.id}',this.value)" style="width:auto;padding:3px 8px;font-size:11px;margin-top:2px" aria-label="Exam date for ${esc(s.name)}"/></div>
 <div><div style="font-size:10px;color:var(--text3)">Sessions</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${c.reviewCount}</div></div>
 ${s.avg!==null?`<div><div style="font-size:10px;color:var(--text3)">Avg Score</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${s.avg.toFixed(0)}%</div></div>`:''}
 </div>
@@ -384,7 +392,7 @@ document.getElementById('conf-next-label').innerHTML=`Next review in <strong sty
 function selectConf(n){confSelected=n;renderConfBtns();}
 function submitConf(){
 if(!confModalSubjId)return;
-confidence[confModalSubjId]={score:confSelected,lastReview:new Date().toISOString().slice(0,10),reviewCount:(confidence[confModalSubjId]?.reviewCount||0)+1};
+confidence[confModalSubjId]={score:confSelected,lastReview:localDateStr(new Date()),reviewCount:(confidence[confModalSubjId]?.reviewCount||0)+1};
 saveConf();closeConfModal();renderRevision();
 }
 function renderTimetable(){

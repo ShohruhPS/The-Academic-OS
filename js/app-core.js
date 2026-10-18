@@ -1,3 +1,7 @@
+/* ── local-calendar date helpers (the app used UTC dates, which is a day off for part of every day outside UTC) ── */
+function localDateStr(d){d=d||new Date();if(!(d instanceof Date)||isNaN(d))return'';return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function parseDay(s){if(s instanceof Date)return new Date(s.getTime());if(typeof s==='string'){var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s);if(m)return new Date(+m[1],+m[2]-1,+m[3]);}return new Date(s);}
+function daysUntil(s){var t=parseDay(s);if(isNaN(t))return null;var n=new Date();return Math.round((new Date(t.getFullYear(),t.getMonth(),t.getDate())-new Date(n.getFullYear(),n.getMonth(),n.getDate()))/864e5);}
 function scoreToGPA(s){return s>=90?4.0:s>=80?3.7:s>=70?3.3:s>=60?3.0:s>=50?2.0:0.0;}
 function scoreToLetter(s){return s>=90?'A*':s>=80?'A':s>=70?'B':s>=60?'C':s>=50?'D':'U/F';}
 function scoreToCat(s){return s>=90?'Excellent':s>=80?'Very Good':s>=70?'Good':s>=60?'Satisfactory':s>=50?'Pass':'Fail';}
@@ -217,15 +221,9 @@ function fmtT(t){const[h,m]=t.split(':').map(Number);return`${h%12||12}:${String
 function dayN(d){return{0:'Sun',1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat',7:'Sun'}[d]||'';}
 function toMin(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
 function srInt(s){return{1:1,2:2,3:4,4:7,5:14}[s]||7;}
-function daysToExam(sid){
-const stored=JSON.parse(localStorage.getItem('academicOS_examDates')||'{}');
-if(stored[sid]) return Math.ceil((new Date(stored[sid])-new Date())/864e5);
-const offsets={s1:42,s2:35,s3:28,s4:56,s5:21,s6:49,s7:63,s8:70,s9:14,s10:18};
-if(!(sid in offsets)) return null;
-const d=new Date();d.setDate(d.getDate()+offsets[sid]);
-return offsets[sid];
-}
-function isPrio(sid){const d=daysToExam(sid);return d!==null&&d>0&&d<=30;}
+function getExamDates(){var d=load('examDates',null);if(d&&typeof d==='object')return d;try{return JSON.parse(localStorage.getItem('academicOS_examDates')||'{}')||{};}catch(e){return {};}}
+function daysToExam(sid){var d=getExamDates()[sid];if(!d)return null;return daysUntil(d);}
+function isPrio(sid){const d=daysToExam(sid);return d!==null&&d>=0&&d<=30;}
 function getCurrentScheduleInfo(){
 const now=new Date();
 const jsDow=now.getDay(); 

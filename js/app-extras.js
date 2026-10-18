@@ -39,6 +39,7 @@ studentInfo:studentInfo,
 confidence:confidence,
 revisionSessions:revisionSessions,
 customGPAScale:customGPAScale,
+examDates:getExamDates(),
 custom_subjects:SUBJECTS,
 focus_state:focusState
 }
@@ -48,7 +49,7 @@ const blob=new Blob([json],{type:'application/json'});
 const url=URL.createObjectURL(blob);
 const a=document.createElement('a');
 a.href=url;
-const date=new Date().toISOString().slice(0,10);
+const date=localDateStr(new Date());
 const name=(studentInfo&&studentInfo.name?studentInfo.name.replace(/[^a-zA-Z0-9_\-]/g,'_').replace(/_+/g,'_')+'_':'')+'academic_os_backup_'+date+'.json';
 a.download=name;
 document.body.appendChild(a);
@@ -75,7 +76,7 @@ const keyMap={
 grades:'grades',tasks:'tasks',notes:'notes',gradeSheet:'gradesheet',
 timetable:'timetable',studentInfo:'studentInfo',confidence:'confidence',
 revisionSessions:'revisionSessions',customGPAScale:'customGPAScale',
-custom_subjects:'custom_subjects',focus_state:'focus_state'
+custom_subjects:'custom_subjects',focus_state:'focus_state',examDates:'examDates'
 };
 Object.entries(keyMap).forEach(([backupKey,storageKey])=>{
 if(d[backupKey]!==undefined){
@@ -95,14 +96,13 @@ reader.readAsText(file);
 function buildDailyQueue(){
 const container = document.getElementById('daily-queue-body');
 if(!container) return;
-const today = new Date().toISOString().slice(0,10);
+const today = localDateStr(new Date());
 const now   = new Date();
 function taskScore(t){
 if(t.done) return -1; 
 let score = 0;
-if(t.dueDate){
-const due = new Date(t.dueDate);
-const diffDays = Math.round((due - now) / 86400000);
+const diffDays = t.dueDate ? daysUntil(t.dueDate) : null;
+if(diffDays !== null){
 if(diffDays < 0)      score += 1000 + Math.abs(diffDays) * 10; 
 else if(diffDays === 0) score += 500;  
 else if(diffDays <= 3)  score += 300;  
@@ -126,9 +126,8 @@ if(slots.length >= 3) break;
 const subj   = getSubj(t.subjectId);
 const subjColor = subj.color || '#3b82f6';
 let badge, badgeClass, slotColor, label;
-if(t.dueDate){
-const due = new Date(t.dueDate);
-const diffDays = Math.round((due - now) / 86400000);
+const diffDays = t.dueDate ? daysUntil(t.dueDate) : null;
+if(diffDays !== null){
 if(diffDays < 0){
 badge = '🚨 Overdue';  badgeClass = 'urgent';
 slotColor = 'rgba(225,29,72,0.6)';
@@ -249,7 +248,7 @@ if(navEl) switchView(viewId, navEl);
 }
 document.addEventListener('DOMContentLoaded', function(){
 refreshAllSubjectSelects();
-document.getElementById('gm-date').value=new Date().toISOString().slice(0,10);
+document.getElementById('gm-date').value=localDateStr(new Date());
 if(document.getElementById('gs-std-subject')) gsPopulateStdList();
 const savedStudent=load('studentInfo',null);
 if(savedStudent) Object.assign(studentInfo,savedStudent);
@@ -284,7 +283,7 @@ h += '<div class="hmap-col">';
 for(let d = 0; d < 7; d++){
 const dt = new Date(today);
 dt.setDate(today.getDate() - (W-1-w)*7 - (today.getDay()||7) + d + 1);
-const ds = dt.toISOString().slice(0,10);
+const ds = localDateStr(dt);
 const mins = heatData[ds]||0;
 let bg;
 if(mins === 0)       bg = 'rgba(255,255,255,.07)';
@@ -292,7 +291,7 @@ else if(mins <= 60)  bg = 'rgba(59,130,246,.45)';
 else if(mins <= 120) bg = 'rgba(16,185,129,.55)';
 else if(mins <= 180) bg = 'rgba(245,158,11,.6)';
 else                 bg = 'rgba(225,29,72,.8)';
-const isTd = ds === today.toISOString().slice(0,10);
+const isTd = ds === localDateStr(today);
 const tooltip = mins > 0 ? `${ds} — ${mins} min studied` : ds;
 h += `<div class="hmap-cell" style="background:${bg};${isTd?'outline:2px solid var(--blue);outline-offset:1px':''}" title="${tooltip}"></div>`;
 }
@@ -314,7 +313,7 @@ document.getElementById('rs-topic').value = sess.topic||'';
 }
 document.getElementById('rev-session-modal-title').textContent = 'Edit Study Session';
 } else {
-document.getElementById('rs-date').value = new Date().toISOString().slice(0,10);
+document.getElementById('rs-date').value = localDateStr(new Date());
 document.getElementById('rs-duration').value = '';
 document.getElementById('rs-topic').value = '';
 document.getElementById('rev-session-modal-title').textContent = 'Add Study Session';
@@ -376,12 +375,20 @@ const DEFAULT_GPA_SCALE = [
 ];
 let customGPAScale = load('customGPAScale', DEFAULT_GPA_SCALE.map(g=>({...g})));
 function saveGPAScale(){save('customGPAScale',customGPAScale);}
+function _scale(){return (Array.isArray(customGPAScale)&&customGPAScale.length)?customGPAScale:DEFAULT_GPA_SCALE;}
 function scoreToGPA(s){
-const sorted = [...customGPAScale].sort((a,b)=>b.minScore-a.minScore);
+const sorted = [..._scale()].sort((a,b)=>b.minScore-a.minScore);
 for(const entry of sorted){
 if(s >= entry.minScore) return entry.points;
 }
 return 0.0;
+}
+function scoreToLetter(s){   // follows the custom scale, so letters, points and the planner always agree
+const sorted = [..._scale()].sort((a,b)=>b.minScore-a.minScore);
+for(const entry of sorted){
+if(s >= entry.minScore) return entry.grade;
+}
+return 'U/F';
 }
 function openGPASettingsModal(){
 renderGPAScaleRows();
