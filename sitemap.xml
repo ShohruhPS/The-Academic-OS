@@ -1,8 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://academicos.me/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-10-18</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://academicos.me/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://academicos.me/ru/"/>
+    <xhtml:link rel="alternate" hreflang="uz" href="https://academicos.me/uz/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://academicos.me/"/>
+  </url>
+  <url>
+    <loc>https://academicos.me/ru/</loc>
+    <lastmod>2026-10-18</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://academicos.me/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://academicos.me/ru/"/>
+    <xhtml:link rel="alternate" hreflang="uz" href="https://academicos.me/uz/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://academicos.me/"/>
+  </url>
+  <url>
+    <loc>https://academicos.me/uz/</loc>
+    <lastmod>2026-10-18</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://academicos.me/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://academicos.me/ru/"/>
+    <xhtml:link rel="alternate" hreflang="uz" href="https://academicos.me/uz/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://academicos.me/"/>
+  </url>
+  <url>
+    <loc>https://academicos.me/gpa-calculator.html</loc>
+    <lastmod>2026-10-18</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://academicos.me/gpa-calculator.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://academicos.me/ru/gpa-calculator.html"/>
+    <xhtml:link rel="alternate" hreflang="uz" href="https://academicos.me/uz/gpa-calculator.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://academicos.me/gpa-calculator.html"/>
+  </url>
+  <url>
+    <loc>https://academicos.me/ru/gpa-calculator.html</loc>
+    <lastmod>2026-10-18</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://academicos.me/gpa-calculator.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://academicos.me/ru/gpa-calculator.html"/>
+    <xhtml:link rel="alternate" hreflang="uz" href="https://academicos.me/uz/gpa-calculator.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://academicos.me/gpa-calculator.html"/>
+  </url>
+  <url>
+    <loc>https://academicos.me/uz/gpa-calculator.html</loc>
+    <lastmod>2026-10-18</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://academicos.me/gpa-calculator.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://academicos.me/ru/gpa-calculator.html"/>
+    <xhtml:link rel="alternate" hreflang="uz" href="https://academicos.me/uz/gpa-calculator.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://academicos.me/gpa-calculator.html"/>
   </url>
 </urlset>
