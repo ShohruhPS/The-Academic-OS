@@ -534,113 +534,178 @@ gradeSheet=gradeSheet.filter(r=>r.id!==_gsEditId);
 saveGS();closeGSEditModal();renderGradeSheet();
 }
 function exportGSPDF(){
-const{jsPDF}=window.jspdf;
-const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-const W=297,H=210;
-doc.setFillColor(13,15,20);doc.rect(0,0,W,H,'F');
-doc.setFillColor(18,22,32);doc.rect(0,0,W,30,'F');
-doc.setTextColor(232,234,242);doc.setFontSize(17);doc.setFont('helvetica','bold');
-const pdfTitle=studentInfo.name?studentInfo.name+' — Grade Report':'Grade Report';
-doc.text(pdfTitle,14,13);
-doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(154,160,184);
-const si=[];
-if(studentInfo.name) si.push('Student: '+studentInfo.name);
-if(studentInfo.gradeLevel) si.push('Grade: '+studentInfo.gradeLevel);
-if(studentInfo.year) si.push(studentInfo.year);
-si.push('Generated: '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}));
-doc.text(si.join('   ·   '),14,22);
-const rows=gradeSheet.map(r=>({...r,...gsCalc(r)}));
-const maxT=gradeSheet.length?Math.max(...gradeSheet.map(r=>r.numTests)):1;
-const uwGPA=gsUnweightedGPA();
-const wGPA=gsWeightedGPA();
-const saHdrs=Array.from({length:maxT},(_,i)=>`SA ${i+1}`);
-const headers=[['Subject',...saHdrs,'SA Avg','Exam Mark','Final Mark','Grade','UW GPA']];
-const body=rows.map(r=>{
-const tVals=Array.from({length:maxT},(_,i)=>{
-const v=r.tests&&r.tests[i]!=null?r.tests[i]:null;
-return v!=null?String(v):'—';
-});
-const saAvgStr=r.saAvg!=null?String(r.saAvg):'—';
-const examStr=r.examEntered?String(r.examVal):(r.examWeight===0?'N/A':'—');
-const finalStr=r.finalRounded!=null?String(r.finalRounded):(r.hasExam&&!r.examEntered&&r.saAvg!=null?r.saAvg+'*':'—');
-const gpaStr=r.uwGPA!=null?r.uwGPA.toFixed(1):'—';
-return[r.name,...tVals,saAvgStr,examStr,finalStr,r.grade,gpaStr];
-});
-const withG=rows.filter(r=>r.rawPct!=null);
-const avgSA=withG.length?Math.round(withG.reduce((a,r)=>a+r.rawPct,0)/withG.length):null;
-body.push(['AVERAGE',...Array(maxT).fill(''),avgSA!=null?String(avgSA):'—','','','',uwGPA.toFixed(2)]);
-const gradeCol=headers[0].length-2;
-const gpaCol=headers[0].length-1;
-doc.autoTable({
-startY:34,
-head:headers,
-body,
-theme:'grid',
-tableWidth:'auto',
-styles:{
-fillColor:[22,26,38],textColor:[232,234,242],
-fontSize:9,cellPadding:{top:3.5,bottom:3.5,left:5,right:5},
-lineColor:[50,56,76],lineWidth:0.25,overflow:'linebreak'
-},
-headStyles:{fillColor:[14,17,28],textColor:[154,160,184],fontStyle:'bold',fontSize:8,halign:'center'},
-columnStyles:{0:{halign:'left',fontStyle:'bold',cellWidth:30}},
-alternateRowStyles:{fillColor:[17,21,32]},
-didParseCell:(data)=>{
-if(data.section!=='body') return;
-const v=data.cell.raw;
-if(data.column.index===gradeCol){
-if(v==='A*'||v==='A') data.cell.styles.textColor=[16,185,129];
-else if(v==='B') data.cell.styles.textColor=[59,130,246];
-else if(v==='C') data.cell.styles.textColor=[245,158,11];
-else if(v==='D') data.cell.styles.textColor=[225,29,72];
-else if(v==='U/F') data.cell.styles.textColor=[90,96,120];
-data.cell.styles.fontStyle='bold';
-}
-if(data.column.index===gpaCol){
-const gv=parseFloat(v);
-if(!isNaN(gv)){
-if(gv>=4.0) data.cell.styles.textColor=[16,185,129];
-else if(gv>=3.7) data.cell.styles.textColor=[52,211,153];
-else if(gv>=3.3) data.cell.styles.textColor=[59,130,246];
-else if(gv>=3.0) data.cell.styles.textColor=[245,158,11];
-else if(gv>=2.0) data.cell.styles.textColor=[225,29,72];
-}
-}
-if(data.column.index===maxT+1){
-const sv=parseFloat(v);
-if(!isNaN(sv)){
-if(sv>=90) data.cell.styles.textColor=[16,185,129];
-else if(sv>=80) data.cell.styles.textColor=[52,211,153];
-else if(sv>=70) data.cell.styles.textColor=[59,130,246];
-else if(sv>=60) data.cell.styles.textColor=[245,158,11];
-else if(sv>=50) data.cell.styles.textColor=[225,29,72];
-data.cell.styles.fontStyle='bold';
-}
-}
-if(data.row.index===body.length-1){
-data.cell.styles.fontStyle='bold';
-data.cell.styles.fillColor=[22,26,42];
-}
-}
-});
-const finalY=Math.min(doc.lastAutoTable.finalY+10, H-28);
-const boxes=[
-{label:'Student',val:studentInfo.name||'—',x:14,w:58,color:[59,130,246]},
-{label:'Grade Level',val:studentInfo.gradeLevel||'—',x:76,w:46,color:[139,92,246]},
-{label:'Unweighted GPA',val:uwGPA.toFixed(2)+' / 4.00',x:126,w:60,color:[59,130,246]},
-{label:'Weighted GPA',val:wGPA.toFixed(2)+' / 4.00',x:190,w:60,color:[139,92,246]},
-{label:'Subjects',val:String(gradeSheet.length),x:254,w:30,color:[16,185,129]},
-];
-boxes.forEach(b=>{
-doc.setFillColor(18,22,32);doc.setDrawColor(...b.color);
-doc.roundedRect(b.x,finalY,b.w,17,2,2,'FD');
-doc.setTextColor(120,126,148);doc.setFontSize(6.5);doc.setFont('helvetica','normal');
-doc.text(b.label,b.x+3,finalY+5.5);
-doc.setTextColor(...b.color);doc.setFontSize(10.5);doc.setFont('helvetica','bold');
-doc.text(String(b.val),b.x+3,finalY+13);
-});
-const fname='grade_sheet'+(studentInfo.name?'_'+studentInfo.name.replace(/[^a-zA-Z0-9_\-]/g,'_').replace(/_+/g,'_'):'')+'_'+localDateStr(new Date())+'.pdf';
-doc.save(fname);
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const W=297,H=210,M=14;
+  const FONT='times';
+  const INK=[20,24,35], MUTED=[100,106,120], RULE=[200,204,212], NAVY=[30,41,82];
+
+  const rows=gradeSheet.map(r=>({...r,...gsCalc(r)}));
+  const withG=rows.filter(r=>r.rawPct!=null);
+  const maxT=gradeSheet.length?Math.max(...gradeSheet.map(r=>r.numTests)):1;
+  const uwGPA=gsUnweightedGPA();
+  const wGPA=gsWeightedGPA();
+  const stars=withG.filter(r=>r.rawPct>=90).length;
+  const as_=withG.filter(r=>r.rawPct>=80&&r.rawPct<90).length;
+  const avgPct=withG.length?withG.reduce((a,r)=>a+r.rawPct,0)/withG.length:null;
+  const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+
+  /* ── Header ── */
+  doc.setFont(FONT,'bold');doc.setFontSize(22);doc.setTextColor(...NAVY);
+  doc.text(studentInfo.name||'Student',M,18);
+  doc.setFont(FONT,'normal');doc.setFontSize(12);doc.setTextColor(...MUTED);
+  doc.text('Academic Grade Report',M,25);
+  doc.setFontSize(9);
+  doc.text('Generated '+dateStr,W-M,18,{align:'right'});
+  doc.text('The Academic OS',W-M,23,{align:'right'});
+  doc.setDrawColor(...NAVY);doc.setLineWidth(0.6);doc.line(M,29,W-M,29);
+
+  /* ── Summary strip ── */
+  const strip=[
+    ['GRADE LEVEL',studentInfo.gradeLevel||'—'],
+    ['ACADEMIC YEAR',studentInfo.year||'—'],
+    ['SUBJECTS',String(gradeSheet.length)],
+    ['OVERALL AVERAGE',avgPct!=null?avgPct.toFixed(1)+'%':'—'],
+    ['UNWEIGHTED GPA',uwGPA.toFixed(2)+' / 4.00'],
+    ['WEIGHTED GPA',wGPA.toFixed(2)+' / 4.00'],
+    ['TOP GRADES',stars+' A*  ·  '+as_+' A'],
+  ];
+  const cw=(W-2*M)/strip.length;
+  strip.forEach((s,i)=>{
+    const x=M+i*cw;
+    doc.setFont(FONT,'normal');doc.setFontSize(7.5);doc.setTextColor(...MUTED);
+    doc.text(s[0],x,36);
+    doc.setFont(FONT,'bold');doc.setFontSize(13);doc.setTextColor(...INK);
+    doc.text(String(s[1]),x,43);
+  });
+  doc.setDrawColor(...RULE);doc.setLineWidth(0.3);doc.line(M,48,W-M,48);
+
+  /* ── Table ── */
+  const saHdrs=Array.from({length:maxT},(_,i)=>'SA '+(i+1));
+  const headers=[['Subject','Lessons / Wk',...saHdrs,'SA Avg','SA Wt','Exam','Exam Wt','Final','Grade','UW GPA']];
+  const body=rows.map(r=>{
+    const tVals=Array.from({length:maxT},(_,i)=>{
+      const v=r.tests&&r.tests[i]!=null?r.tests[i]:null;
+      return v!=null?String(v):'—';
+    });
+    const sw=r.saWeight!=null?r.saWeight:60;
+    const ew=r.examWeight!=null?r.examWeight:40;
+    const examStr=r.examEntered?String(r.examVal):(ew===0?'N/A':'—');
+    const finalStr=r.finalRounded!=null?String(r.finalRounded):(r.hasExam&&!r.examEntered&&r.saAvg!=null?r.saAvg+'*':'—');
+    return [r.name,String(r.lessonsPerWeek||3),...tVals,
+      r.saAvg!=null?String(r.saAvg):'—',sw+'%',examStr,ew+'%',
+      finalStr,r.grade||'—',r.uwGPA!=null?r.uwGPA.toFixed(1):'—'];
+  });
+  const testAvgs=Array.from({length:maxT},(_,i)=>{
+    const v=gradeSheet.map(r=>r.tests&&r.tests[i]!=null?Number(r.tests[i]):null).filter(x=>x!==null);
+    return v.length?String(Math.round(v.reduce((s,x)=>s+x,0)/v.length)):'—';
+  });
+  const saVals=rows.map(r=>r.saAvg).filter(x=>x!=null);
+  const finVals=rows.map(r=>r.finalRounded).filter(x=>x!=null);
+  body.push(['AVERAGE','',...testAvgs,
+    saVals.length?String(Math.round(saVals.reduce((a,b)=>a+b,0)/saVals.length)):'—','','','',
+    finVals.length?String(Math.round(finVals.reduce((a,b)=>a+b,0)/finVals.length)):'—',
+    '',uwGPA.toFixed(2)]);
+
+  const col={sa:maxT+2,final:maxT+6,grade:maxT+7,gpa:maxT+8};
+  const markColor=v=>v>=90?[21,128,61]:v>=80?[22,163,74]:v>=70?[29,78,216]:v>=60?[180,83,9]:v>=50?[185,28,28]:null;
+
+  doc.autoTable({
+    startY:53,
+    head:headers,
+    body,
+    theme:'grid',
+    margin:{left:M,right:M,top:16,bottom:18},
+    styles:{
+      font:FONT,fontSize:9.5,textColor:INK,fillColor:[255,255,255],
+      lineColor:RULE,lineWidth:0.2,halign:'center',valign:'middle',
+      cellPadding:{top:3,bottom:3,left:3,right:3}
+    },
+    headStyles:{fillColor:[238,240,245],textColor:NAVY,fontStyle:'bold',fontSize:8.5},
+    alternateRowStyles:{fillColor:[249,250,252]},
+    columnStyles:{0:{halign:'left',fontStyle:'bold',cellWidth:42}},
+    didParseCell:(data)=>{
+      if(data.section!=='body') return;
+      const v=data.cell.raw;
+      const isAvgRow=data.row.index===body.length-1;
+      if(data.column.index===col.grade){
+        if(v==='A*'||v==='A') data.cell.styles.textColor=[21,128,61];
+        else if(v==='B') data.cell.styles.textColor=[29,78,216];
+        else if(v==='C') data.cell.styles.textColor=[180,83,9];
+        else if(v==='D') data.cell.styles.textColor=[185,28,28];
+        else if(v==='U/F') data.cell.styles.textColor=[107,114,128];
+        data.cell.styles.fontStyle='bold';
+      }
+      if(data.column.index===col.gpa){
+        const g=parseFloat(v);
+        if(!isNaN(g)){
+          data.cell.styles.textColor=g>=3.7?[21,128,61]:g>=3.3?[29,78,216]:g>=3.0?[180,83,9]:g>=2.0?[185,28,28]:INK;
+          data.cell.styles.fontStyle='bold';
+        }
+      }
+      if(data.column.index===col.sa||data.column.index===col.final){
+        const sv=parseFloat(v);
+        const c=isNaN(sv)?null:markColor(sv);
+        if(c){data.cell.styles.textColor=c;data.cell.styles.fontStyle='bold';}
+      }
+      if(isAvgRow){
+        data.cell.styles.fontStyle='bold';
+        data.cell.styles.fillColor=[238,240,245];
+      }
+    }
+  });
+
+  /* ── Scale + notes ── */
+  let y=doc.lastAutoTable.finalY+8;
+  if(y+38>H-14){doc.addPage();y=20;}
+
+  doc.setFont(FONT,'bold');doc.setFontSize(9.5);doc.setTextColor(...NAVY);
+  doc.text('Grading Scale',M,y);
+  doc.setFont(FONT,'normal');doc.setFontSize(9);doc.setTextColor(...INK);
+  let scaleTxt='';
+  try{
+    scaleTxt=[..._scale()].sort((a,b)=>b.minScore-a.minScore)
+      .map(b=>b.grade+': '+b.minScore+'%+ = '+Number(b.points).toFixed(1)).join('     ');
+  }catch(e){
+    scaleTxt='A*: 90%+ = 4.0     A: 80%+ = 3.7     B: 70%+ = 3.3     C: 60%+ = 3.0     D: 50%+ = 2.0     U/F: below 50% = 0.0';
+  }
+  doc.text(doc.splitTextToSize(scaleTxt,W-2*M),M,y+5.5);
+
+  y+=14;
+  doc.setFont(FONT,'bold');doc.setFontSize(9.5);doc.setTextColor(...NAVY);
+  doc.text('Notes',M,y);
+  doc.setFont(FONT,'normal');doc.setFontSize(9);doc.setTextColor(...MUTED);
+  const notes=[
+    'SA = Summative Assessment. Final mark = SA average × SA weight + exam mark × exam weight.',
+    '* = provisional final mark (exam mark not yet entered; SA average shown).',
+    'Unweighted GPA averages all subjects equally. Weighted GPA weights each subject by lessons per week.'
+  ];
+  try{
+    const p=calculateProjectedRequirements();
+    if(p&&p.targetGPA!=null){
+      let t='Target GPA: '+p.targetGPA.toFixed(2)+' (needs '+p.targetPct+'% overall)';
+      if(p.globalRequired!=null&&p.totalRemainingW>0){
+        t+=p.globalRequired>100
+          ?'. Not reachable with the remaining assessments.'
+          :'. Requires an average of '+p.globalRequired.toFixed(1)+'% on remaining assessments.';
+      }
+      notes.push(t);
+    }
+  }catch(e){}
+  notes.forEach((n,i)=>doc.text(n,M,y+5.5+i*4.6));
+
+  /* ── Footer on every page ── */
+  const pages=doc.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setDrawColor(...RULE);doc.setLineWidth(0.3);doc.line(M,H-12,W-M,H-12);
+    doc.setFont(FONT,'normal');doc.setFontSize(8.5);doc.setTextColor(...MUTED);
+    doc.text((studentInfo.name?studentInfo.name+' — ':'')+'Grade Report',M,H-7);
+    doc.text('Page '+i+' of '+pages,W-M,H-7,{align:'right'});
+  }
+
+  const fname='grade_sheet'+(studentInfo.name?'_'+studentInfo.name.replace(/[^a-zA-Z0-9_\-]/g,'_').replace(/_+/g,'_'):'')+'_'+localDateStr(new Date())+'.pdf';
+  doc.save(fname);
 }
 function exportGSCSV(){
 const rows=gradeSheet.map(r=>({...r,...gsCalc(r)}));
